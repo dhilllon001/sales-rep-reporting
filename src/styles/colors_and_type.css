@@ -1,0 +1,301 @@
+/* ==========================================================================
+   ChargerFleet / Pearl Technologies — Logistics Operations Design Tokens
+   Dark-mode first. Information-dense. Built for 8+ hour operator use.
+   ========================================================================== */
+
+/* ----------------------------------------------------------------------
+   Brand fonts
+   Inter — self-hosted (confirmed). Optical-size subfamilies: 18pt (UI/body),
+           24pt (headings), 28pt (display). Tabular numerals always on.
+   JetBrains Mono — Google Fonts. Used for IDs, coords, timestamps.
+   ---------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Inter 18pt */
+@font-face { font-family: 'Inter 18pt'; font-weight: 400; font-style: normal; font-display: swap; src: url('/fonts/Inter_18pt-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 18pt'; font-weight: 400; font-style: italic; font-display: swap; src: url('/fonts/Inter_18pt-Italic.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 18pt'; font-weight: 500; font-style: normal; font-display: swap; src: url('/fonts/Inter_18pt-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 18pt'; font-weight: 600; font-style: normal; font-display: swap; src: url('/fonts/Inter_18pt-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 18pt'; font-weight: 700; font-style: normal; font-display: swap; src: url('/fonts/Inter_18pt-Bold.ttf') format('truetype'); }
+
+/* Inter 24pt */
+@font-face { font-family: 'Inter 24pt'; font-weight: 400; font-style: normal; font-display: swap; src: url('/fonts/Inter_24pt-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 24pt'; font-weight: 500; font-style: normal; font-display: swap; src: url('/fonts/Inter_24pt-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 24pt'; font-weight: 600; font-style: normal; font-display: swap; src: url('/fonts/Inter_24pt-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 24pt'; font-weight: 700; font-style: normal; font-display: swap; src: url('/fonts/Inter_24pt-Bold.ttf') format('truetype'); }
+
+/* Inter 28pt */
+@font-face { font-family: 'Inter 28pt'; font-weight: 500; font-style: normal; font-display: swap; src: url('/fonts/Inter_28pt-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 28pt'; font-weight: 600; font-style: normal; font-display: swap; src: url('/fonts/Inter_28pt-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Inter 28pt'; font-weight: 700; font-style: normal; font-display: swap; src: url('/fonts/Inter_28pt-Bold.ttf') format('truetype'); }
+
+/* ==========================================================================
+   DARK THEME (default) — operations consoles
+   ========================================================================== */
+:root, [data-theme="dark"] {
+  /* ---- Brand hues (unchanged core palette) ---- */
+  --pearl-navy-500: #0F2A44;
+  --pearl-blue-500: #1E5FAA;
+  --pearl-teal-500: #1BA098;
+  --pearl-orange-500: #F07F3C;
+
+  /* ---- Surfaces (dark, slightly blue-tinted) ---- */
+  --bg-app:       #0B1017;   /* app canvas */
+  --bg-surface-1: #111823;   /* panels */
+  --bg-surface-2: #18212E;   /* cards within panels */
+  --bg-surface-3: #202B3A;   /* raised / hover */
+  --bg-overlay:   rgba(6, 10, 16, 0.72);
+
+  /* ---- Text ---- */
+  --fg-1: #E8EDF3;   /* primary text */
+  --fg-2: #B4BFCD;   /* secondary */
+  --fg-3: #7C8898;   /* meta / column headers */
+  --fg-4: #4E5865;   /* disabled */
+  --fg-invert: #0B1017;
+
+  /* ---- Borders / dividers (hairlines, calm) ---- */
+  --border-1: rgba(255, 255, 255, 0.06);   /* internal dividers */
+  --border-2: rgba(255, 255, 255, 0.10);   /* card edges */
+  --border-3: rgba(255, 255, 255, 0.16);   /* input, focused card */
+
+  /* ---- Action ---- */
+  --action:        #2E76C9;          /* Pearl blue-400 — legible on dark */
+  --action-hover:  #3E86D6;
+  --action-press:  #245F9F;
+  --action-fg:     #FFFFFF;
+
+  --accent:        #25B1A4;          /* teal */
+  --accent-fg:     #062826;
+
+  --focus-ring:    #5795E3;
+
+  /* ---- Logistics status palette (replaces generic semantic) ---- */
+  /* Each has -bg (tinted surface), -fg (text/icon on dark), -solid (saturated chip fill) */
+  --st-dispatched-bg:  rgba(87, 149, 227, 0.12);
+  --st-dispatched-fg:  #8FBBEF;
+  --st-dispatched-dot: #5795E3;
+
+  --st-enroute-bg:     rgba(37, 177, 164, 0.12);
+  --st-enroute-fg:     #5BD4C6;
+  --st-enroute-dot:    #25B1A4;
+
+  --st-atshipper-bg:   rgba(189, 158, 255, 0.12);
+  --st-atshipper-fg:   #C8B2FF;
+  --st-atshipper-dot:  #9F80F5;
+
+  --st-loading-bg:     rgba(255, 187, 84, 0.12);
+  --st-loading-fg:     #FFD08A;
+  --st-loading-dot:    #F5A72C;
+
+  --st-departed-bg:    rgba(87, 149, 227, 0.12);
+  --st-departed-fg:    #8FBBEF;
+  --st-departed-dot:   #5795E3;
+
+  --st-intransit-bg:   rgba(37, 177, 164, 0.14);
+  --st-intransit-fg:   #5BD4C6;
+  --st-intransit-dot:  #25B1A4;
+
+  --st-atborder-bg:    rgba(240, 127, 60, 0.14);
+  --st-atborder-fg:    #FFB483;
+  --st-atborder-dot:   #F07F3C;
+
+  --st-cleared-bg:     rgba(87, 210, 140, 0.12);
+  --st-cleared-fg:     #7EE0A4;
+  --st-cleared-dot:    #3CC47A;
+
+  --st-delivered-bg:   rgba(87, 210, 140, 0.14);
+  --st-delivered-fg:   #7EE0A4;
+  --st-delivered-dot:  #3CC47A;
+
+  --st-detention-bg:   rgba(255, 187, 84, 0.16);
+  --st-detention-fg:   #FFCB6F;
+  --st-detention-dot:  #F5A72C;
+
+  --st-late-bg:        rgba(240, 94, 84, 0.14);
+  --st-late-fg:        #FF9E94;
+  --st-late-dot:       #E8564A;
+
+  --st-exception-bg:   rgba(240, 94, 84, 0.18);
+  --st-exception-fg:   #FFB0A6;
+  --st-exception-dot:  #E8564A;
+
+  /* ---- Shadows (used sparingly; dark mode prefers borders) ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.40);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+
+  /* ---- Type ---- */
+  --font-display: 'Inter 28pt', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: 'Inter 24pt', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-body:    'Inter 18pt', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fs-display: 32px;   /* ops headers are restrained */
+  --fs-h1:      24px;
+  --fs-h2:      20px;
+  --fs-h3:      16px;
+  --fs-h4:      14px;
+  --fs-body:    13px;
+  --fs-small:   12px;
+  --fs-micro:   11px;
+
+  --lh-heading: 1.25;
+  --lh-body:    1.5;
+  --lh-tight:   1.2;
+
+  /* ---- Spacing (4px base) ---- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-7: 32px; --space-8: 48px;
+
+  /* ---- Radii (conservative — enterprise) ---- */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  /* ---- Data grid ---- */
+  --row-xs: 28px;   /* compact */
+  --row-sm: 32px;   /* default */
+  --row-md: 40px;   /* comfortable */
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dur-fast: 100ms;
+  --dur-base: 160ms;
+
+  /* ---- Layout ---- */
+  --sidebar-width: 232px;
+  --topbar-height: 52px;
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   LIGHT THEME — crisp, same data density
+   ========================================================================== */
+[data-theme="light"] {
+  --bg-app:       #E0E4EA;
+  --bg-surface-1: #FFFFFF;
+  --bg-surface-2: #F4F5F7;
+  --bg-surface-3: #D4D9E1;
+  --bg-muted:     #F4F5F7;
+  --section-head: #F4F5F7;
+  --table-row-alt: #F7F8FA;
+  --table-row-hover: #EEF0F4;
+  --bg-overlay:   rgba(15, 25, 40, 0.45);
+
+  --fg-1: #0F1A2A;
+  --fg-2: #3D4A5C;
+  --fg-3: #6B7685;
+  --fg-4: #A4ADBA;
+  --fg-invert: #FFFFFF;
+
+  --border-1: #DDE1E8;
+  --border-2: #CDD3DC;
+  --border-3: #B8BFC9;
+
+  --action:       #1E5FAA;
+  --action-hover: #184E8D;
+  --action-press: #133D6F;
+
+  --st-dispatched-bg:  #EBF3FC; --st-dispatched-fg: #1E5FAA;
+  --st-enroute-bg:     #E6F7F5; --st-enroute-fg:    #0E6F68;
+  --st-atshipper-bg:   #F1ECFF; --st-atshipper-fg:  #5940B8;
+  --st-loading-bg:     #FBF4E2; --st-loading-fg:    #8A6712;
+  --st-departed-bg:    #EBF3FC; --st-departed-fg:   #1E5FAA;
+  --st-intransit-bg:   #E6F7F5; --st-intransit-fg:  #0E6F68;
+  --st-atborder-bg:    #FCEEE4; --st-atborder-fg:   #B04F16;
+  --st-cleared-bg:     #E6F6EC; --st-cleared-fg:    #1F7A43;
+  --st-delivered-bg:   #E6F6EC; --st-delivered-fg:  #1F7A43;
+  --st-detention-bg:   #FBF4E2; --st-detention-fg:  #8A6712;
+  --st-late-bg:        #FAE8E6; --st-late-fg:       #A32B22;
+  --st-exception-bg:   #FAE8E6; --st-exception-fg:  #A32B22;
+
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   TYPE — shorthand classes. Tabular numerals ALWAYS ON for ops UI.
+   ========================================================================== */
+.t-display { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-display); line-height: var(--lh-heading); color: var(--fg-1); letter-spacing: -0.01em; }
+.t-h1 { font-family: var(--font-heading); font-weight: 600; font-size: var(--fs-h1); line-height: var(--lh-heading); color: var(--fg-1); }
+.t-h2 { font-family: var(--font-heading); font-weight: 600; font-size: var(--fs-h2); line-height: var(--lh-heading); color: var(--fg-1); }
+.t-h3 { font-family: var(--font-heading); font-weight: 600; font-size: var(--fs-h3); line-height: var(--lh-tight); color: var(--fg-1); }
+.t-h4 { font-family: var(--font-body); font-weight: 600; font-size: var(--fs-h4); line-height: var(--lh-tight); color: var(--fg-1); }
+.t-body { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--fg-2); }
+.t-small { font-family: var(--font-body); font-weight: 400; font-size: var(--fs-small); line-height: var(--lh-body); color: var(--fg-2); }
+.t-micro { font-family: var(--font-body); font-weight: 500; font-size: var(--fs-micro); line-height: var(--lh-tight); color: var(--fg-3); }
+.t-eyebrow { font-family: var(--font-body); font-weight: 600; font-size: 10px; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+.t-code, .t-mono { font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-body); color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.t-num, .tabular { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-variant-numeric: tabular-nums;        /* global tab-nums */
+  font-feature-settings: "tnum" 1, "cv11" 1; /* Inter: straight-sided 1 */
+  color: var(--fg-1);
+  background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { color: var(--action); text-decoration: none; transition: color var(--dur-base) var(--ease-out); }
+a:hover { color: var(--action-hover); }
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* Tabular cell helper */
+.cell-num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ==========================================================================
+   STATUS PILL — use with .st-<status>
+   ========================================================================== */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  font-family: var(--font-body); font-weight: 600; font-size: 11px; line-height: 18px;
+  letter-spacing: 0.01em; white-space: nowrap;
+}
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 1; flex: none; }
+.st-dispatched { background: var(--st-dispatched-bg); color: var(--st-dispatched-fg); }
+.st-enroute    { background: var(--st-enroute-bg);    color: var(--st-enroute-fg); }
+.st-atshipper  { background: var(--st-atshipper-bg);  color: var(--st-atshipper-fg); }
+.st-loading    { background: var(--st-loading-bg);    color: var(--st-loading-fg); }
+.st-departed   { background: var(--st-departed-bg);   color: var(--st-departed-fg); }
+.st-intransit  { background: var(--st-intransit-bg);  color: var(--st-intransit-fg); }
+.st-atborder   { background: var(--st-atborder-bg);   color: var(--st-atborder-fg); }
+.st-cleared    { background: var(--st-cleared-bg);    color: var(--st-cleared-fg); }
+.st-delivered  { background: var(--st-delivered-bg);  color: var(--st-delivered-fg); }
+.st-detention  { background: var(--st-detention-bg);  color: var(--st-detention-fg); }
+.st-late       { background: var(--st-late-bg);       color: var(--st-late-fg); }
+.st-exception  { background: var(--st-exception-bg);  color: var(--st-exception-fg); }
+
+/* ==========================================================================
+   LEG TAGS — stop-type labels shown next to each leg stop (small caps chips)
+   Matches dxdesign TMS reference: PICKUP / DROP / HOOK / DELIVER / BORDER / LOAD
+   ========================================================================== */
+.leg-tag {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 58px; padding: 3px 8px; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-weight: 700; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2;
+  border: 1px solid currentColor; white-space: nowrap;
+}
+/* Light-mode tag palette (reference uses colored outlines on white) */
+[data-theme="light"] .lt-pickup  { color: #1E5FAA; background: #EBF3FC; border-color: #B9D4F1; }
+[data-theme="light"] .lt-drop    { color: #B04F16; background: #FCEEE4; border-color: #F0C9A8; }
+[data-theme="light"] .lt-hook    { color: #8A6712; background: #FBF4E2; border-color: #E8D28A; }
+[data-theme="light"] .lt-deliver { color: #1F7A43; background: #E6F6EC; border-color: #B3DEC1; }
+[data-theme="light"] .lt-border  { color: #5940B8; background: #F1ECFF; border-color: #D3C6F5; }
+[data-theme="light"] .lt-load    { color: #5940B8; background: #F1ECFF; border-color: #D3C6F5; }
+/* Dark variants */
+.lt-pickup  { color: #8FBBEF; background: rgba(87,149,227,.12); border-color: rgba(143,187,239,.35); }
+.lt-drop    { color: #FFB483; background: rgba(240,127,60,.12);  border-color: rgba(255,180,131,.35); }
+.lt-hook    { color: #FFCB6F; background: rgba(245,167,44,.12);  border-color: rgba(255,203,111,.35); }
+.lt-deliver { color: #7EE0A4; background: rgba(60,196,122,.12);  border-color: rgba(126,224,164,.35); }
+.lt-border  { color: #C8B2FF; background: rgba(159,128,245,.12); border-color: rgba(200,178,255,.35); }
+.lt-load    { color: #C8B2FF; background: rgba(159,128,245,.12); border-color: rgba(200,178,255,.35); }
