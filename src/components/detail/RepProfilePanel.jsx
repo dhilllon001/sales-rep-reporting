@@ -9,6 +9,35 @@ function healthTone(score) {
   return 'risk'
 }
 
+const TREND_COLORS = {
+  up: { stroke: '#1F7A43', fill: 'rgba(31, 122, 67, 0.14)', bg: 'rgba(230, 246, 236, 0.65)' },
+  down: { stroke: '#A32B22', fill: 'rgba(163, 43, 34, 0.12)', bg: 'rgba(250, 232, 230, 0.7)' },
+  flat: { stroke: '#6B7685', fill: 'rgba(107, 118, 133, 0.1)', bg: 'rgba(244, 246, 248, 0.9)' },
+}
+
+function MiniSparkline({ data, trend }) {
+  if (!data?.length) return null
+  const w = 72
+  const h = 30
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const range = max - min || 1
+  const coords = data.map((v, i) => {
+    const x = (i / Math.max(data.length - 1, 1)) * w
+    const y = h - 3 - ((v - min) / range) * (h - 6)
+    return [x, y]
+  })
+  const line = coords.map((p) => p.join(',')).join(' ')
+  const area = `${coords.map((p) => `${p[0]},${p[1]}`).join(' ')} ${w},${h} 0,${h}`
+  const colors = TREND_COLORS[trend] || TREND_COLORS.flat
+  return (
+    <svg className="sr-momentum-spark" viewBox={`0 0 ${w} ${h}`} width={w} height={h} aria-hidden>
+      <polygon points={area} fill={colors.fill} />
+      <polyline points={line} fill="none" stroke={colors.stroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function TrendBadge({ trend, momentum }) {
   const icons = { up: 'trending-up', down: 'trending-down', flat: 'minus' }
   const cls = trend === 'up' ? 'sr-ai-badge--up' : trend === 'down' ? 'sr-ai-badge--down' : 'sr-ai-badge--flat'
@@ -21,44 +50,46 @@ function TrendBadge({ trend, momentum }) {
   )
 }
 
-function MomentumRow({ customer, onSelect }) {
+function MomentumCard({ customer, onSelect }) {
   const clickable = customer.isSubRep && onSelect
+  const colors = TREND_COLORS[customer.trend] || TREND_COLORS.flat
+  const Tag = clickable ? 'button' : 'article'
   return (
-    <button
-      type="button"
-      className={`sr-momentum-row sr-momentum-row--${customer.trend}${clickable ? ' is-clickable' : ''}`}
+    <Tag
+      type={clickable ? 'button' : undefined}
+      className={`sr-momentum-card sr-momentum-card--${customer.trend}${clickable ? ' is-clickable' : ''}`}
+      style={{ '--momentum-tint': colors.bg }}
       onClick={clickable ? () => onSelect(customer.id) : undefined}
-      disabled={!clickable}
     >
-      <span className={`sr-momentum-row__dot sr-momentum-row__dot--${customer.trend}`} />
-      <span className="sr-momentum-row__body">
-        <span className="sr-momentum-row__top">
-          <span className="sr-momentum-row__name" title={customer.name}>{customer.name}</span>
-          <TrendBadge trend={customer.trend} momentum={customer.momentum} />
-        </span>
-        <span className="sr-momentum-row__meta">
-          {customer.isSubRep ? 'Direct report' : customer.industry}
-          {' · '}
-          {formatCurrency(customer.gp)}
-          {' · '}
-          {customer.share}% share
-        </span>
-      </span>
-    </button>
+      <div className="sr-momentum-card__main">
+        <div className="sr-momentum-card__copy">
+          <div className="sr-momentum-card__top">
+            <span className="sr-momentum-card__name" title={customer.name}>{customer.name}</span>
+            <TrendBadge trend={customer.trend} momentum={customer.momentum} />
+          </div>
+          <span className="sr-momentum-card__meta">
+            {formatCurrency(customer.gp)}
+            <span className="sr-momentum-card__sep">·</span>
+            {customer.share}% share
+          </span>
+        </div>
+        <MiniSparkline data={customer.spark} trend={customer.trend} />
+      </div>
+    </Tag>
   )
 }
 
 function MomentumSection({ title, trend, customers, onSelectRep }) {
   if (!customers.length) return null
   return (
-    <section className={`sr-momentum-section sr-momentum-section--${trend} sr-momentum-section--compact`}>
+    <section className={`sr-momentum-section sr-momentum-section--${trend} sr-momentum-section--cards`}>
       <header className="sr-momentum-section__head">
         <span className="sr-momentum-section__title">{title}</span>
         <span className="sr-momentum-section__count">{customers.length}</span>
       </header>
       <div className="sr-momentum-section__list">
         {customers.map((c) => (
-          <MomentumRow key={`${c.id}-${c.isSubRep ? 'rep' : 'cust'}`} customer={c} onSelect={onSelectRep} />
+          <MomentumCard key={`${c.id}-${c.isSubRep ? 'rep' : 'cust'}`} customer={c} onSelect={onSelectRep} />
         ))}
       </div>
     </section>

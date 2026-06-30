@@ -308,22 +308,52 @@ export function ModulePie({ slices, selectedSliceIds = [], onSelectSlice, size =
   return <ReactECharts option={option} style={{ width: size, height: size }} opts={{ renderer: 'svg' }} onEvents={onEvents} notMerge lazyUpdate />
 }
 
-export function MultiLineChart({ labels, series, height = 220, yFmt }) {
+export function MultiLineChart({ labels, series, height = 220, yFmt, legendRight = false }) {
   const fmt = yFmt || ((v) => {
     const abs = Math.abs(v); const sign = v < 0 ? '-' : ''
     if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(2)}M`
     if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(1)}K`
     return `${sign}$${abs.toFixed(0)}`
   })
+  const showLegend = series.length > 1
   const option = useMemo(() => ({
-    grid: { left: 52, right: 16, top: 16, bottom: series.length > 1 ? 36 : 28 },
+    grid: {
+      left: 52,
+      right: legendRight && showLegend ? 148 : 16,
+      top: 16,
+      bottom: 28,
+    },
     tooltip: { ...baseTooltip(), trigger: 'axis', valueFormatter: fmt },
-    legend: series.length > 1 ? { bottom: 0, type: 'scroll', textStyle: { fontSize: 10, color: cssVar('--fg-2') } } : undefined,
-    xAxis: { type: 'category', data: labels, axisLabel: { fontSize: 11, color: cssVar('--fg-2'), fontFamily: baseTextStyle.fontFamily, rotate: 20 }, axisLine: { lineStyle: { color: cssVar('--border-2') } }, axisTick: { show: false } },
+    legend: showLegend ? (legendRight ? {
+      orient: 'vertical',
+      right: 4,
+      top: 'middle',
+      itemWidth: 10,
+      itemHeight: 8,
+      itemGap: 10,
+      textStyle: { fontSize: 10, color: cssVar('--fg-2'), width: 120, overflow: 'truncate' },
+    } : {
+      bottom: 0,
+      type: 'scroll',
+      textStyle: { fontSize: 10, color: cssVar('--fg-2') },
+    }) : undefined,
+    xAxis: {
+      type: 'category',
+      data: labels,
+      axisLabel: {
+        fontSize: 10,
+        color: cssVar('--fg-2'),
+        fontFamily: baseTextStyle.fontFamily,
+        rotate: legendRight ? 0 : 20,
+        interval: legendRight ? 'auto' : 0,
+      },
+      axisLine: { lineStyle: { color: cssVar('--border-2') } },
+      axisTick: { show: false },
+    },
     yAxis: { type: 'value', axisLabel: { fontSize: 11, color: cssVar('--fg-2'), formatter: fmt, fontFamily: 'JetBrains Mono, monospace', fontWeight: 500 }, splitLine: { lineStyle: { color: cssVar('--border-1'), type: 'dashed' } } },
     series: series.map((s) => ({ name: s.name, type: 'line', data: s.data, smooth: 0.2, symbol: 'circle', symbolSize: 4, lineStyle: { width: 1.5, color: s.color }, itemStyle: { color: s.color } })),
     animationDuration: 500,
-  }), [labels, series, fmt])
+  }), [labels, series, fmt, legendRight, showLegend])
   return <ReactECharts option={option} style={{ width: '100%', height }} opts={{ renderer: 'svg' }} notMerge lazyUpdate />
 }
 

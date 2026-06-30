@@ -371,16 +371,33 @@ export function topRepsTrendSeries(repIds, months) {
   })
 }
 
+const REVENUE_CHART_EXCLUDED = ['AMERICAN HONDA']
+
 export function customerRevenueTrend(repId, months, limit = 4, repIds = null) {
   const ids = repIds || [repId]
-  const ranked = customersForRepIds(ids, months).slice(0, limit)
+  const ranked = customersForRepIds(ids, months)
+    .filter((c) => !REVENUE_CHART_EXCLUDED.includes(c.name))
+    .slice(0, limit)
   const colors = ['#3CC47A', '#5795E3', '#25B1A4', '#F5A72C']
   return ranked.map((cust, i) => {
     const data = months.map((month) => {
       const rows = customerMonthlyList.filter((m) => m.customerId === cust.id && m.month === month)
       return sumMetrics(rows).revenue
     })
-    return { name: cust.name.slice(0, 22), data, color: colors[i % colors.length] }
+    const shortName = cust.name
+      .replace(/\s+(CORPORATION|COMPANY|INC|LLC|US|NA)\.?$/gi, '')
+      .replace(/\s+LOGISTICS$/i, '')
+      .split(' ')
+      .slice(0, 3)
+      .join(' ')
+    return { name: shortName.slice(0, 20), data, color: colors[i % colors.length] }
+  })
+}
+
+function customerGpSpark(custId, months) {
+  return months.slice(-6).map((month) => {
+    const rows = customerMonthlyList.filter((m) => m.customerId === custId && m.month === month)
+    return sumMetrics(rows).gp
   })
 }
 
@@ -419,6 +436,7 @@ export function buildRepProfile(rep, customers, classification, teamMembers = []
       share,
       trend,
       momentum,
+      spark: customerGpSpark(c.id, LAST_12_MONTHS),
       health: Math.min(99, Math.max(35, 60 + Math.round(momentum / 2) + (i % 15))),
     }
   })
@@ -426,6 +444,10 @@ export function buildRepProfile(rep, customers, classification, teamMembers = []
   const subRepScores = teamMembers.map((member) => {
     const cl = classifyRep(member.id)
     const trend = cl.gpChange >= 8 ? 'up' : cl.gpChange <= -8 ? 'down' : 'flat'
+    const spark = LAST_12_MONTHS.slice(-6).map((month) => {
+      const rows = monthlyMetricsList.filter((m) => m.salesRepId === member.id && m.month === month)
+      return sumMetrics(rows).gp
+    })
     return {
       id: member.id,
       name: member.name,
@@ -436,6 +458,7 @@ export function buildRepProfile(rep, customers, classification, teamMembers = []
       share: totalGp > 0 ? Math.round((cl.recent.gp / (totalGp + cl.recent.gp)) * 100) : 0,
       trend,
       momentum: cl.gpChange,
+      spark,
       health: Math.min(99, Math.max(40, 65 + Math.round(cl.gpChange / 4))),
       isSubRep: true,
     }

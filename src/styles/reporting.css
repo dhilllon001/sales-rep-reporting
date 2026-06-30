@@ -282,29 +282,10 @@
 .sr-detail-header--compact {
   justify-content: space-between;
   gap: 16px;
+  align-items: flex-start;
 }
 
-.sr-detail-header__identity {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.sr-detail-header__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, #EBF3FC, #D6E4F7);
-  color: var(--action);
-  font-size: 13px;
-  font-weight: 800;
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-
-.sr-detail-header__text { min-width: 0; }
+.sr-detail-header__text { min-width: 0; flex: 1; }
 
 .sr-detail-header__name {
   margin: 0;
@@ -1987,6 +1968,89 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.sr-momentum-section--cards { margin-bottom: 12px; }
+
+.sr-momentum-section--cards .sr-momentum-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sr-momentum-card {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--momentum-tint, var(--bg-surface-1));
+  overflow: hidden;
+  text-align: left;
+  font-family: inherit;
+  appearance: none;
+}
+
+.sr-momentum-card--up { border-left: 3px solid #3CC47A; }
+.sr-momentum-card--flat { border-left: 3px solid #A4ADBA; }
+.sr-momentum-card--down { border-left: 3px solid #E8564A; }
+
+.sr-momentum-card.is-clickable {
+  cursor: pointer;
+  transition: box-shadow 0.12s, border-color 0.12s, transform 0.12s;
+}
+
+.sr-momentum-card.is-clickable:hover {
+  border-color: var(--action);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.sr-momentum-card__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.sr-momentum-card__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.sr-momentum-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.sr-momentum-card__name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sr-momentum-card__meta {
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.sr-momentum-card__sep { margin: 0 4px; opacity: 0.6; }
+
+.sr-momentum-spark {
+  flex: none;
+  display: block;
+}
+
+.sr-panel-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fg-3);
+  text-align: center;
 }
 
 .sr-momentum-row {

@@ -5,13 +5,14 @@ import { StatTile, LineTrendChart, MultiLineChart, formatCurrency, formatPct } f
 import RepProfilePanel from '../components/detail/RepProfilePanel.jsx'
 import ResizableDetailLayout from '../components/detail/ResizableDetailLayout.jsx'
 import { useReportingScope } from '../context/ReportingScopeContext.jsx'
-import { LAST_REFRESH, monthLabel, salesReps } from '../data/salesRepMock.js'
+import { LAST_REFRESH, monthLabel, monthLabelShort, salesReps } from '../data/salesRepMock.js'
 import {
   customersForRep, metricsForRepIds, repMonthlyBreakdown, classifyRep,
   customerRevenueTrend, buildRepProfile, teamMembersFor, isManager, periodMonths,
 } from '../data/selectors.js'
 
 const INSIGHT_COLLAPSED_KEY = 'sr.insightPanelCollapsed'
+const LAST_REP_KEY = 'sr.lastRepId'
 
 function PctCell({ value }) {
   if (value == null) return <span>—</span>
@@ -53,7 +54,9 @@ export default function SalesRepDetail() {
 
   const repId = searchParams.get('rep')
     || (filters.viewAsId && filters.viewAsId !== 'ALL' ? filters.viewAsId : null)
-    || (filters.salesRepId !== 'ALL' ? filters.salesRepId : salesReps[0]?.id)
+    || (filters.salesRepId !== 'ALL' ? filters.salesRepId : null)
+    || (() => { try { return localStorage.getItem(LAST_REP_KEY) } catch { return null } })()
+    || salesReps[0]?.id
   const rep = salesReps.find((r) => r.id === repId)
   const teamMembers = useMemo(() => (rep ? teamMembersFor(rep.id) : []), [rep])
   const showTeamToggle = rep && isManager(rep.id)
@@ -79,6 +82,14 @@ export default function SalesRepDetail() {
   useEffect(() => {
     setTeamMode('self')
   }, [repId])
+
+  useEffect(() => {
+    if (!repId) return
+    try { localStorage.setItem(LAST_REP_KEY, repId) } catch {}
+    if (!searchParams.get('rep')) {
+      setSearchParams({ rep: repId }, { replace: true })
+    }
+  }, [repId, searchParams, setSearchParams])
 
   const lastPeriod = useMemo(() => (scopeRepIds.length ? metricsForRepIds(scopeRepIds, periodMonthsList) : null), [scopeRepIds, periodMonthsList])
   const metrics12 = useMemo(() => (scopeRepIds.length ? metricsForRepIds(scopeRepIds, periodMonths('LAST_12')) : null), [scopeRepIds])
@@ -107,9 +118,16 @@ export default function SalesRepDetail() {
     return customerRevenueTrend(rep.id, periodMonthsList, 4, teamMode === 'team' && showTeamToggle ? scopeRepIds : null)
   }, [rep, periodMonthsList, teamMode, showTeamToggle, scopeRepIds])
 
-  const trendLabels = monthly.map((m) => monthLabel(m.month))
+  const trendLabels = monthly.map((m) => monthLabelShort(m.month))
   const gpSeries = [{ name: 'Gross Profit', data: monthly.map((m) => m.gp), color: '#3CC47A', showLabels: true, fill: true }]
   const periodLabel = periodKey === 'LAST_12' ? '12 months' : '3 months'
+
+  const insightSummary = {
+    gp12: metrics12?.gp ?? 0,
+    gp3: metrics3?.gp ?? 0,
+    gpChange: classification?.gpChange ?? 0,
+    customerCount: customers.length,
+  }
 
   if (!rep || !lastPeriod || !classification || !profile || !metrics12 || !metrics3) {
     return (
@@ -122,29 +140,18 @@ export default function SalesRepDetail() {
     )
   }
 
-  const initials = rep.name.split(' ').map((n) => n[0]).join('').slice(0, 2)
-  const insightSummary = {
-    gp12: metrics12.gp,
-    gp3: metrics3.gp,
-    gpChange: classification.gpChange,
-    customerCount: customers.length,
-  }
-
   return (
     <div className="sr-page sr-page--detail">
       <header className="sr-page__header sr-page__header--detail sr-page__header--compact">
         <div className="sr-detail-header sr-detail-header--compact">
-          <div className="sr-detail-header__identity">
-            <div className="sr-detail-header__avatar" aria-hidden>{initials}</div>
-            <div className="sr-detail-header__text">
-              <h1 className="sr-detail-header__name">{rep.name}</h1>
-              <div className="sr-detail-header__meta">
-                <span>{rep.country}</span>
-                <span className="sr-detail-header__sep">·</span>
-                <span>{rep.email}</span>
-                <span className="sr-detail-header__sep">·</span>
-                <span>Updated {LAST_REFRESH}</span>
-              </div>
+          <div className="sr-detail-header__text">
+            <h1 className="sr-detail-header__name">{rep.name}</h1>
+            <div className="sr-detail-header__meta">
+              <span>{rep.country}</span>
+              <span className="sr-detail-header__sep">·</span>
+              <span>{rep.email}</span>
+              <span className="sr-detail-header__sep">·</span>
+              <span>Updated {LAST_REFRESH}</span>
             </div>
           </div>
           <Pill status={classification.performance === 'trending' ? 'enroute' : classification.performance === 'loss' ? 'exception' : 'cleared'}>
@@ -218,34 +225,38 @@ export default function SalesRepDetail() {
                 <Panel title="Gross Profit Trend" sub={`Monthly · last ${periodLabel}${teamMode === 'team' ? ' · team' : ''}`} pad bodyStyle={{ padding: '12px 8px 4px' }}>
                   <LineTrendChart labels={trendLabels} series={gpSeries} height={260} showEveryLabel />
                 </Panel>
-                <Panel title="Performance: Gross Profit" sub="Month-over-month change" pad bodyStyle={{ padding: 0 }}>
-                  <div className="sr-table-wrap sr-table-wrap--panel" style={{ maxHeight: 280 }}>
-                    <table className="sr-table sr-table--compact">
-                      <thead>
-                        <tr><th>Month</th><th className="num">Orders</th><th className="num">Revenue</th><th className="num">GP</th><th className="num">GP %</th><th className="num">Δ GP</th></tr>
-                      </thead>
-                      <tbody>
-                        {monthly.map((m) => (
-                          <tr key={m.month}>
-                            <td>{monthLabel(m.month)}</td>
-                            <td className="num mono">{m.orders}</td>
-                            <td className="num mono">{formatCurrency(m.revenue)}</td>
-                            <td className={`num mono ${m.gp >= 0 ? 'sr-gp-positive' : 'sr-gp-negative'}`}>{formatCurrency(m.gp)}</td>
-                            <td className="num mono">{formatPct(m.gpPct)}</td>
-                            <td className="num"><PctCell value={m.pctGp} /></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Panel>
+                {custTrend.length > 0 ? (
+                  <Panel title="Revenue Performance" sub={`Top customers · monthly revenue · last ${periodLabel}`} pad bodyStyle={{ padding: '8px 4px 12px' }}>
+                    <MultiLineChart labels={trendLabels} series={custTrend} height={260} legendRight />
+                  </Panel>
+                ) : (
+                  <Panel title="Revenue Performance" sub="No customer revenue data for this period" pad bodyStyle={{ padding: '24px 16px' }}>
+                    <p className="sr-panel-empty">No revenue trend data available.</p>
+                  </Panel>
+                )}
               </div>
 
-              {custTrend.length > 0 && (
-                <Panel title="Revenue Performance" sub={`Top customers · monthly revenue · last ${periodLabel}`} pad bodyStyle={{ padding: '8px 4px 12px' }}>
-                  <MultiLineChart labels={trendLabels} series={custTrend} height={240} />
-                </Panel>
-              )}
+              <Panel title="Performance: Gross Profit" sub="Month-over-month change" pad bodyStyle={{ padding: 0 }}>
+                <div className="sr-table-wrap sr-table-wrap--panel" style={{ maxHeight: 280 }}>
+                  <table className="sr-table sr-table--compact">
+                    <thead>
+                      <tr><th>Month</th><th className="num">Orders</th><th className="num">Revenue</th><th className="num">GP</th><th className="num">GP %</th><th className="num">Δ GP</th></tr>
+                    </thead>
+                    <tbody>
+                      {monthly.map((m) => (
+                        <tr key={m.month}>
+                          <td>{monthLabel(m.month)}</td>
+                          <td className="num mono">{m.orders}</td>
+                          <td className="num mono">{formatCurrency(m.revenue)}</td>
+                          <td className={`num mono ${m.gp >= 0 ? 'sr-gp-positive' : 'sr-gp-negative'}`}>{formatCurrency(m.gp)}</td>
+                          <td className="num mono">{formatPct(m.gpPct)}</td>
+                          <td className="num"><PctCell value={m.pctGp} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
 
               <Panel title="Customer Gross Profit" sub={`${customers.length} customers · last ${periodLabel} · USD`} pad bodyStyle={{ padding: 0 }}>
                 <div className="sr-table-wrap sr-table-wrap--panel">

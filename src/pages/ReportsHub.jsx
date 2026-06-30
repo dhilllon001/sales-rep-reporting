@@ -1,8 +1,18 @@
 import React, { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Icon } from '../components/primitives.jsx'
+import { salesReps } from '../data/salesRepMock.js'
 
 const HUB_KEY = 'sr.reportsHubCollapsed'
+const LAST_REP_KEY = 'sr.lastRepId'
+
+function defaultRepId() {
+  try {
+    const saved = localStorage.getItem(LAST_REP_KEY)
+    if (saved && salesReps.some((r) => r.id === saved)) return saved
+  } catch {}
+  return salesReps[0]?.id || ''
+}
 
 const LINKS = [
   { segment: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', path: 'dashboard' },
@@ -13,6 +23,14 @@ function navActive(pathname, segment) {
   if (segment === 'dashboard') return pathname.includes('/sales-rep/dashboard')
   if (segment === 'rep-detail') return pathname.includes('/sales-rep/rep-detail')
   return false
+}
+
+function linkTo(link) {
+  if (link.segment === 'rep-detail') {
+    const rep = defaultRepId()
+    return rep ? `rep-detail?rep=${rep}` : 'rep-detail'
+  }
+  return link.path
 }
 
 export default function ReportsHub() {
@@ -49,7 +67,7 @@ export default function ReportsHub() {
             {LINKS.map((link) => (
               <NavLink
                 key={link.segment}
-                to={link.path}
+                to={linkTo(link)}
                 title={collapsed ? link.label : undefined}
                 isActive={(_, loc) => navActive(loc.pathname, link.segment)}
                 className={({ isActive }) => `shell-nav-item${isActive ? ' is-active' : ''}`}

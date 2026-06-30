@@ -43,6 +43,12 @@ export function monthLabel(key) {
   return `${names[Number(m) - 1]} ${y}`
 }
 
+export function monthLabelShort(key) {
+  const [y, m] = key.split('-')
+  const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${names[Number(m) - 1]} '${String(y).slice(-2)}`
+}
+
 function buildMonths() {
   const months = []
   for (let y = 2024; y <= 2026; y++) {
