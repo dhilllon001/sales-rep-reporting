@@ -15,8 +15,8 @@ function defaultRepId() {
 }
 
 const LINKS = [
-  { segment: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', path: 'dashboard' },
-  { segment: 'rep-detail', label: 'Sales Rep Detail', icon: 'user', path: 'rep-detail' },
+  { segment: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', path: 'sales-rep/dashboard' },
+  { segment: 'rep-detail', label: 'Sales Rep Detail', icon: 'user', path: 'sales-rep/rep-detail' },
 ]
 
 function navActive(pathname, segment) {
@@ -28,7 +28,7 @@ function navActive(pathname, segment) {
 function linkTo(link) {
   if (link.segment === 'rep-detail') {
     const rep = defaultRepId()
-    return rep ? `rep-detail?rep=${rep}` : 'rep-detail'
+    return rep ? `${link.path}?rep=${rep}` : link.path
   }
   return link.path
 }

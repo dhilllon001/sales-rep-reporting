@@ -5,6 +5,10 @@ import {
   StatTile, LineTrendChart, BarList, MultiLineChart,
   formatCurrency, formatPct,
 } from '../components/charts.jsx'
+import {
+  HoverPopoverGrid, HoverPopoverHint, HoverPopoverTitle,
+  RowHoverPopover, useRowHover,
+} from '../components/RowHoverPopover.jsx'
 import ModuleBreakdown from '../components/dashboard/ModuleBreakdown.jsx'
 import { useReportingScope } from '../context/ReportingScopeContext.jsx'
 import { LAST_REFRESH, monthLabel, MONTHS, salesReps, COUNTRIES } from '../data/salesRepMock.js'
@@ -40,6 +44,8 @@ export default function SalesRepDashboard() {
   const [selectedSlices, setSelectedSlices] = useState([])
   const [topRankMode, setTopRankMode] = useState('reps')
   const [bottomRankMode, setBottomRankMode] = useState('reps')
+  const mainTableHover = useRowHover()
+  const rankTableHover = useRowHover()
 
   const periodKey = filters.deliveryMonth || 'LAST_3'
   const periodLabel = periodKey === 'LAST_12' ? 'last 12 months' : 'last 3 months'
@@ -144,8 +150,27 @@ export default function SalesRepDashboard() {
 
   const onOpenRep = (id) => {
     setFilters({ viewAsId: id, salesRepId: id })
+    try { localStorage.setItem('sr.lastRepId', id) } catch {}
     navigate(`/reports/sales-rep/rep-detail?rep=${id}`)
   }
+
+  const repHoverRows = (r) => [
+    ['Customers', r.customerCount],
+    ['Orders', r.recent.orders.toLocaleString()],
+    ['Revenue', formatCurrency(r.recent.revenue)],
+    ['Gross profit', formatCurrency(r.recent.gp)],
+    ['GP trend', formatPct(r.gpChange, true)],
+    ['Performance', r.performance],
+  ]
+
+  const customerHoverRows = (c) => [
+    ['Sales rep', c.salesRepName || '—'],
+    ['Industry', c.industry || '—'],
+    ['Country', c.country || '—'],
+    ['Orders', c.orders?.toLocaleString() ?? '—'],
+    ['Revenue', formatCurrency(c.revenue)],
+    ['Gross profit', formatCurrency(c.gp)],
+  ]
 
   const repOptions = [
     { value: 'ALL', label: 'All Sales Reps' },
@@ -301,7 +326,12 @@ export default function SalesRepDashboard() {
                 <thead><tr><th>Rep</th><th className="num">Orders</th><th className="num">Revenue</th><th className="num">GP</th><th className="num">Trend</th></tr></thead>
                 <tbody>
                   {top.map((r) => (
-                    <tr key={r.id} onClick={() => onOpenRep(r.id)}>
+                    <tr
+                      key={r.id}
+                      className={`sr-table-row--hoverable sr-table-row--clickable${rankTableHover.isHovered(`top-${r.id}`) ? ' is-hovered' : ''}`}
+                      {...rankTableHover.bind(`top-${r.id}`, { type: 'rep', row: r })}
+                      onClick={() => onOpenRep(r.id)}
+                    >
                       <td className="rep-name">{r.name}</td>
                       <td className="num mono">{r.recent.orders}</td>
                       <td className="num mono">{formatCurrency(r.recent.revenue)}</td>
@@ -316,7 +346,11 @@ export default function SalesRepDashboard() {
                 <thead><tr><th>Customer</th><th>Rep</th><th className="num">Orders</th><th className="num">Revenue</th><th className="num">GP</th></tr></thead>
                 <tbody>
                   {topCust.map((c) => (
-                    <tr key={c.id}>
+                    <tr
+                      key={c.id}
+                      className={`sr-table-row--hoverable${rankTableHover.isHovered(`topc-${c.id}`) ? ' is-hovered' : ''}`}
+                      {...rankTableHover.bind(`topc-${c.id}`, { type: 'customer', row: c })}
+                    >
                       <td className="rep-name">{c.name}</td>
                       <td>{c.salesRepName}</td>
                       <td className="num mono">{c.orders}</td>
@@ -341,7 +375,12 @@ export default function SalesRepDashboard() {
                 <thead><tr><th>Rep</th><th className="num">Orders</th><th className="num">Revenue</th><th className="num">GP</th><th className="num">Trend</th></tr></thead>
                 <tbody>
                   {bottom.map((r) => (
-                    <tr key={r.id} onClick={() => onOpenRep(r.id)}>
+                    <tr
+                      key={r.id}
+                      className={`sr-table-row--hoverable sr-table-row--clickable${rankTableHover.isHovered(`bot-${r.id}`) ? ' is-hovered' : ''}`}
+                      {...rankTableHover.bind(`bot-${r.id}`, { type: 'rep', row: r })}
+                      onClick={() => onOpenRep(r.id)}
+                    >
                       <td className="rep-name">{r.name}</td>
                       <td className="num mono">{r.recent.orders}</td>
                       <td className="num mono">{formatCurrency(r.recent.revenue)}</td>
@@ -356,7 +395,11 @@ export default function SalesRepDashboard() {
                 <thead><tr><th>Customer</th><th>Rep</th><th className="num">Orders</th><th className="num">Revenue</th><th className="num">GP</th></tr></thead>
                 <tbody>
                   {bottomCust.map((c) => (
-                    <tr key={c.id}>
+                    <tr
+                      key={c.id}
+                      className={`sr-table-row--hoverable${rankTableHover.isHovered(`botc-${c.id}`) ? ' is-hovered' : ''}`}
+                      {...rankTableHover.bind(`botc-${c.id}`, { type: 'customer', row: c })}
+                    >
                       <td className="rep-name">{c.name}</td>
                       <td>{c.salesRepName}</td>
                       <td className="num mono">{c.orders}</td>
@@ -434,7 +477,12 @@ export default function SalesRepDashboard() {
               </thead>
               <tbody>
                 {tableRows.map((r) => (
-                  <tr key={r.id} className={r.isSubRow ? 'sr-table__sub-row' : ''} onClick={() => onOpenRep(r.id)}>
+                  <tr
+                    key={r.id}
+                    className={`${r.isSubRow ? 'sr-table__sub-row' : ''} sr-table-row--hoverable sr-table-row--clickable${mainTableHover.isHovered(r.id) ? ' is-hovered' : ''}`}
+                    {...mainTableHover.bind(r.id, { type: 'rep', row: r })}
+                    onClick={() => onOpenRep(r.id)}
+                  >
                     <td className="rep-name">{r.isSubRow ? `↳ ${r.name}` : r.name}</td>
                     <td>{r.teamId}</td>
                     <td>{r.country}</td>
@@ -468,6 +516,38 @@ export default function SalesRepDashboard() {
             </table>
           </div>
         </Panel>
+
+        <RowHoverPopover hover={mainTableHover.hover}>
+          {mainTableHover.hover?.data?.type === 'rep' && (
+            <>
+              <HoverPopoverTitle sub={`${mainTableHover.hover.data.row.email} · ${mainTableHover.hover.data.row.country}`}>
+                {mainTableHover.hover.data.row.name}
+              </HoverPopoverTitle>
+              <HoverPopoverGrid rows={repHoverRows(mainTableHover.hover.data.row)} />
+              <HoverPopoverHint>Click row to open sales rep detail</HoverPopoverHint>
+            </>
+          )}
+        </RowHoverPopover>
+
+        <RowHoverPopover hover={rankTableHover.hover}>
+          {rankTableHover.hover?.data?.type === 'rep' && (
+            <>
+              <HoverPopoverTitle sub={`${rankTableHover.hover.data.row.country} · ${rankTableHover.hover.data.row.teamId}`}>
+                {rankTableHover.hover.data.row.name}
+              </HoverPopoverTitle>
+              <HoverPopoverGrid rows={repHoverRows(rankTableHover.hover.data.row)} />
+              <HoverPopoverHint>Click to open sales rep detail</HoverPopoverHint>
+            </>
+          )}
+          {rankTableHover.hover?.data?.type === 'customer' && (
+            <>
+              <HoverPopoverTitle sub={rankTableHover.hover.data.row.industry}>
+                {rankTableHover.hover.data.row.name}
+              </HoverPopoverTitle>
+              <HoverPopoverGrid rows={customerHoverRows(rankTableHover.hover.data.row)} />
+            </>
+          )}
+        </RowHoverPopover>
       </div>
     </div>
   )

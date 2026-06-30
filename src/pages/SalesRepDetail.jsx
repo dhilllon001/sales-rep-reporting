@@ -4,6 +4,10 @@ import { Panel, Pill, Select } from '../components/primitives.jsx'
 import { StatTile, LineTrendChart, MultiLineChart, formatCurrency, formatPct } from '../components/charts.jsx'
 import RepProfilePanel from '../components/detail/RepProfilePanel.jsx'
 import ResizableDetailLayout from '../components/detail/ResizableDetailLayout.jsx'
+import {
+  HoverPopoverGrid, HoverPopoverHint, HoverPopoverTitle,
+  RowHoverPopover, useRowHover,
+} from '../components/RowHoverPopover.jsx'
 import { useReportingScope } from '../context/ReportingScopeContext.jsx'
 import { LAST_REFRESH, monthLabel, monthLabelShort, salesReps } from '../data/salesRepMock.js'
 import {
@@ -117,6 +121,9 @@ export default function SalesRepDetail() {
     if (!rep) return []
     return customerRevenueTrend(rep.id, periodMonthsList, 4, teamMode === 'team' && showTeamToggle ? scopeRepIds : null)
   }, [rep, periodMonthsList, teamMode, showTeamToggle, scopeRepIds])
+
+  const monthHover = useRowHover()
+  const customerHover = useRowHover()
 
   const trendLabels = monthly.map((m) => monthLabelShort(m.month))
   const gpSeries = [{ name: 'Gross Profit', data: monthly.map((m) => m.gp), color: '#3CC47A', showLabels: true, fill: true }]
@@ -244,7 +251,11 @@ export default function SalesRepDetail() {
                     </thead>
                     <tbody>
                       {monthly.map((m) => (
-                        <tr key={m.month}>
+                        <tr
+                          key={m.month}
+                          className={`sr-table-row--hoverable${monthHover.isHovered(m.month) ? ' is-hovered' : ''}`}
+                          {...monthHover.bind(m.month, m)}
+                        >
                           <td>{monthLabel(m.month)}</td>
                           <td className="num mono">{m.orders}</td>
                           <td className="num mono">{formatCurrency(m.revenue)}</td>
@@ -266,7 +277,11 @@ export default function SalesRepDetail() {
                     </thead>
                     <tbody>
                       {customers.map((c) => (
-                        <tr key={`${c.id}-${c.salesRepId}`}>
+                        <tr
+                          key={`${c.id}-${c.salesRepId}`}
+                          className={`sr-table-row--hoverable${customerHover.isHovered(`${c.id}-${c.salesRepId}`) ? ' is-hovered' : ''}`}
+                          {...customerHover.bind(`${c.id}-${c.salesRepId}`, c)}
+                        >
                           <td className="rep-name">{c.name}</td>
                           <td>{c.industry}</td>
                           <td>{c.country}</td>
@@ -294,6 +309,38 @@ export default function SalesRepDetail() {
             </div>
           </ResizableDetailLayout>
         </div>
+
+        <RowHoverPopover hover={monthHover.hover}>
+          {monthHover.hover?.data && (
+            <>
+              <HoverPopoverTitle sub="Month-over-month performance">{monthLabel(monthHover.hover.data.month)}</HoverPopoverTitle>
+              <HoverPopoverGrid rows={[
+                ['Orders', monthHover.hover.data.orders.toLocaleString()],
+                ['Revenue', formatCurrency(monthHover.hover.data.revenue)],
+                ['Gross profit', formatCurrency(monthHover.hover.data.gp)],
+                ['GP margin', formatPct(monthHover.hover.data.gpPct)],
+                ['Δ GP', monthHover.hover.data.pctGp == null ? '—' : formatPct(monthHover.hover.data.pctGp, true)],
+              ]} />
+            </>
+          )}
+        </RowHoverPopover>
+
+        <RowHoverPopover hover={customerHover.hover}>
+          {customerHover.hover?.data && (
+            <>
+              <HoverPopoverTitle sub={`${customerHover.hover.data.industry} · ${customerHover.hover.data.country}`}>
+                {customerHover.hover.data.name}
+              </HoverPopoverTitle>
+              <HoverPopoverGrid rows={[
+                ['Orders', customerHover.hover.data.orders.toLocaleString()],
+                ['Revenue', formatCurrency(customerHover.hover.data.revenue)],
+                ['Cost', formatCurrency(customerHover.hover.data.cost)],
+                ['Gross profit', formatCurrency(customerHover.hover.data.gp)],
+                ['GP margin', formatPct(customerHover.hover.data.gpPct)],
+              ]} />
+            </>
+          )}
+        </RowHoverPopover>
       </div>
     </div>
   )

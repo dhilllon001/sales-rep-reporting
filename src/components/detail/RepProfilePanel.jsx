@@ -1,6 +1,10 @@
 import React from 'react'
 import { Icon } from '../primitives.jsx'
 import { formatCurrency, formatPct } from '../charts.jsx'
+import {
+  HoverPopoverGrid, HoverPopoverHint, HoverPopoverTitle,
+  RowHoverPopover, useRowHover,
+} from '../RowHoverPopover.jsx'
 
 function healthTone(score) {
   if (score >= 80) return 'strong'
@@ -50,16 +54,18 @@ function TrendBadge({ trend, momentum }) {
   )
 }
 
-function MomentumCard({ customer, onSelect }) {
+function MomentumCard({ customer, onSelect, cardHover, cardId }) {
   const clickable = customer.isSubRep && onSelect
   const colors = TREND_COLORS[customer.trend] || TREND_COLORS.flat
   const Tag = clickable ? 'button' : 'article'
+  const hovered = cardHover.isHovered(cardId)
   return (
     <Tag
       type={clickable ? 'button' : undefined}
-      className={`sr-momentum-card sr-momentum-card--${customer.trend}${clickable ? ' is-clickable' : ''}`}
+      className={`sr-momentum-card sr-momentum-card--${customer.trend}${clickable ? ' is-clickable' : ''}${hovered ? ' is-hovered' : ''}`}
       style={{ '--momentum-tint': colors.bg }}
       onClick={clickable ? () => onSelect(customer.id) : undefined}
+      {...cardHover.bind(cardId, customer)}
     >
       <div className="sr-momentum-card__main">
         <div className="sr-momentum-card__copy">
@@ -79,7 +85,7 @@ function MomentumCard({ customer, onSelect }) {
   )
 }
 
-function MomentumSection({ title, trend, customers, onSelectRep }) {
+function MomentumSection({ title, trend, customers, onSelectRep, cardHover, sectionKey }) {
   if (!customers.length) return null
   return (
     <section className={`sr-momentum-section sr-momentum-section--${trend} sr-momentum-section--cards`}>
@@ -88,9 +94,18 @@ function MomentumSection({ title, trend, customers, onSelectRep }) {
         <span className="sr-momentum-section__count">{customers.length}</span>
       </header>
       <div className="sr-momentum-section__list">
-        {customers.map((c) => (
-          <MomentumCard key={`${c.id}-${c.isSubRep ? 'rep' : 'cust'}`} customer={c} onSelect={onSelectRep} />
-        ))}
+        {customers.map((c) => {
+          const cardId = `${sectionKey}-${c.id}-${c.isSubRep ? 'rep' : 'cust'}`
+          return (
+            <MomentumCard
+              key={cardId}
+              cardId={cardId}
+              customer={c}
+              onSelect={onSelectRep}
+              cardHover={cardHover}
+            />
+          )
+        })}
       </div>
     </section>
   )
@@ -98,6 +113,8 @@ function MomentumSection({ title, trend, customers, onSelectRep }) {
 
 export default function RepProfilePanel({ profile, summary, onSelectRep, onCollapse }) {
   const tone = healthTone(profile.healthScore)
+  const cardHover = useRowHover()
+  const hovered = cardHover.hover?.data
 
   return (
     <aside className="sr-insight-panel">
@@ -153,10 +170,28 @@ export default function RepProfilePanel({ profile, summary, onSelectRep, onColla
       </header>
 
       <div className="sr-insight-panel__body sr-insight-panel__body--momentum">
-        <MomentumSection title="Rising" trend="up" customers={profile.rising} onSelectRep={onSelectRep} />
-        <MomentumSection title="Stable" trend="flat" customers={profile.stable} onSelectRep={onSelectRep} />
-        <MomentumSection title="Declining" trend="down" customers={profile.declining} onSelectRep={onSelectRep} />
+        <MomentumSection title="Rising" trend="up" sectionKey="up" customers={profile.rising} onSelectRep={onSelectRep} cardHover={cardHover} />
+        <MomentumSection title="Stable" trend="flat" sectionKey="flat" customers={profile.stable} onSelectRep={onSelectRep} cardHover={cardHover} />
+        <MomentumSection title="Declining" trend="down" sectionKey="down" customers={profile.declining} onSelectRep={onSelectRep} cardHover={cardHover} />
       </div>
+
+      <RowHoverPopover hover={cardHover.hover} width={260}>
+        {hovered && (
+          <>
+            <HoverPopoverTitle sub={hovered.isSubRep ? `Direct report · ${hovered.country}` : `${hovered.industry} · ${hovered.country}`}>
+              {hovered.name}
+            </HoverPopoverTitle>
+            <HoverPopoverGrid rows={[
+              ['Momentum', formatPct(hovered.momentum, true)],
+              ['Gross profit', formatCurrency(hovered.gp)],
+              ['Portfolio share', `${hovered.share}%`],
+              ['Orders', hovered.orders?.toLocaleString() ?? '—'],
+              ['Health score', hovered.health],
+            ]} />
+            {hovered.isSubRep && <HoverPopoverHint>Click to open this rep&apos;s detail</HoverPopoverHint>}
+          </>
+        )}
+      </RowHoverPopover>
     </aside>
   )
 }

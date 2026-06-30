@@ -253,7 +253,13 @@
 .sr-table th.num, .sr-table td.num { text-align: right; }
 .sr-table td { padding: 6px 12px; border-bottom: 1px solid var(--border-1); color: var(--fg-2); height: var(--row-sm); vertical-align: middle; }
 .sr-table tbody tr:nth-child(even) { background: var(--table-row-alt, #F7F8FA); }
-.sr-table tbody tr:hover { background: var(--table-row-hover, #EEF0F4); cursor: pointer; }
+.sr-table tbody tr:hover { background: var(--table-row-hover, #EEF0F4); }
+.sr-table tbody tr.sr-table-row--hoverable:hover,
+.sr-table tbody tr.sr-table-row--hoverable.is-hovered {
+  background: #E8F1FB !important;
+  box-shadow: inset 3px 0 0 var(--action);
+}
+.sr-table tbody tr.sr-table-row--clickable { cursor: pointer; }
 .sr-table tbody tr.is-selected { background: #EBF3FC !important; }
 .sr-table .rep-name { font-weight: 600; color: var(--fg-1); }
 .sr-table .mono { font-family: var(--font-mono); font-size: 12px; }
@@ -1997,6 +2003,80 @@
 .sr-momentum-card.is-clickable {
   cursor: pointer;
   transition: box-shadow 0.12s, border-color 0.12s, transform 0.12s;
+}
+
+.sr-momentum-card.is-clickable { cursor: pointer; }
+
+.sr-momentum-card:hover,
+.sr-momentum-card.is-hovered {
+  border-color: rgba(87, 149, 227, 0.45);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.sr-row-hover-popover {
+  position: fixed;
+  z-index: 10050;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-2);
+  background: var(--bg-surface-1);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  pointer-events: none;
+  animation: sr-hover-pop-in 0.14s ease-out;
+}
+
+@keyframes sr-hover-pop-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sr-hover-popover__head { margin-bottom: 10px; }
+
+.sr-hover-popover__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg-1);
+  line-height: 1.25;
+}
+
+.sr-hover-popover__sub {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.sr-hover-popover__grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.sr-hover-popover__grid dt {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.sr-hover-popover__grid dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fg-1);
+  text-align: right;
+}
+
+.sr-hover-popover__hint {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-1);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--action);
 }
 
 .sr-momentum-card.is-clickable:hover {
