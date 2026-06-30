@@ -1,9 +1,14 @@
 import React, { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from './primitives.jsx'
+import { NavFolder } from './NavFolder.jsx'
+import { REPORT_NAV } from '../config/reportNav.js'
 
 const SIDEBAR_KEY = 'sr.sidebarCollapsed'
 
-export function Sidebar({ activeView, onNav }) {
+export function Sidebar() {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(SIDEBAR_KEY) === '1' } catch { return false }
   })
@@ -14,10 +19,6 @@ export function Sidebar({ activeView, onNav }) {
     return next
   })
 
-  const items = [
-    ['reports', 'Sales Rep Reports', 'bar-chart-2'],
-  ]
-
   return (
     <aside className={`shell-navy shell-sidebar${collapsed ? ' is-collapsed' : ''}`} style={{ width: collapsed ? 64 : 'var(--sidebar-width)' }}>
       <div className="shell-sidebar__brand">
@@ -25,7 +26,7 @@ export function Sidebar({ activeView, onNav }) {
         {!collapsed && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="shell-sidebar__brand-name">ChargerFleet</div>
-            <div className="shell-sidebar__brand-sub">Sales Rep Reporting</div>
+            <div className="shell-sidebar__brand-sub">Reporting</div>
           </div>
         )}
         {!collapsed && (
@@ -43,18 +44,17 @@ export function Sidebar({ activeView, onNav }) {
         <div className="shell-sidebar__section">
           {!collapsed && <div className="shell-sidebar__section-label">Reports</div>}
           {collapsed && <div className="shell-sidebar__divider" />}
-          {items.map(([id, label, icon]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onNav(id)}
-              title={collapsed ? label : undefined}
-              className={`shell-nav-item${activeView === id ? ' is-active' : ''}`}
-            >
-              <span className="shell-nav-item__icon"><Icon name={icon} size={16} /></span>
-              {!collapsed && <span className="shell-nav-item__label">{label}</span>}
-            </button>
-          ))}
+          <div className={`shell-nav-folders${collapsed ? ' is-collapsed' : ''}`}>
+            {REPORT_NAV.map((folder) => (
+              <NavFolder
+                key={folder.id}
+                folder={folder}
+                collapsed={collapsed}
+                pathname={pathname}
+                onNavigate={navigate}
+              />
+            ))}
+          </div>
         </div>
       </nav>
       <div className="shell-sidebar__footer">

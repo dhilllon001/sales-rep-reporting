@@ -148,7 +148,86 @@ export function LineTrendChart({ labels, series, height = 260, yFmt, showEveryLa
   return <ReactECharts option={option} style={{ width: '100%', height }} opts={{ renderer: 'svg' }} notMerge lazyUpdate />
 }
 
-export function DonutKpiChart({ slices, selectedSliceIds = [], onSelectSlice, size = 120, centerValue, centerLabel, valueFmt }) {
+export function formatCurrency(v, compact = true) {
+  if (v == null || Number.isNaN(v)) return '—'
+  const abs = Math.abs(v)
+  const sign = v < 0 ? '(' : ''
+  const end = v < 0 ? ')' : ''
+  if (compact) {
+    if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(2)}M${end}`
+    if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(2)}K${end}`
+  }
+  return `${sign}$${abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${end}`
+}
+
+export function formatDonutValue(v, fmt) {
+  if (v == null || Number.isNaN(v)) return '—'
+  if (fmt === 'currency') return formatCurrency(v, false)
+  if (fmt === 'count' || fmt === 'number') return v.toLocaleString()
+  return v.toLocaleString()
+}
+
+export function DonutChartPopover({
+  title, subtitle, centerValue, centerLabel, slices, highlightId, valueFmt, mode = 'slice', total, className = '',
+}) {
+  const fmt = valueFmt || ((v) => v.toLocaleString())
+  const sum = total ?? (slices.reduce((s, x) => s + Math.max(0, x.value), 0) || 1)
+  const visible = slices.filter((s) => s.value > 0)
+  const highlighted = highlightId && highlightId !== 'center' ? slices.find((s) => s.id === highlightId) : null
+
+  if (mode === 'slice' && highlighted) {
+    const pct = sum > 0 ? ((Math.max(0, highlighted.value) / sum) * 100).toFixed(1) : '0.0'
+    return (
+      <div className={`sr-donut-popover sr-donut-popover--slice ${className}`.trim()} role="tooltip">
+        <div className="sr-donut-popover__accent" style={{ background: highlighted.color }} />
+        <div className="sr-donut-popover__head">
+          <span className="sr-donut-popover__eyebrow">{title}</span>
+          <span className="sr-donut-popover__name">{highlighted.label}</span>
+        </div>
+        <div className="sr-donut-popover__metrics">
+          <span className="sr-donut-popover__metric-main">{fmt(highlighted.value)}</span>
+          <span className="sr-donut-popover__metric-sub">{pct}% of total</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`sr-donut-popover sr-donut-popover--center ${className}`.trim()} role="tooltip">
+      <div className="sr-donut-popover__head">
+        <span className="sr-donut-popover__name">{title}</span>
+        {subtitle && <span className="sr-donut-popover__sub">{subtitle}</span>}
+      </div>
+      {(centerValue != null) && (
+        <div className="sr-donut-popover__hero">
+          <span className="sr-donut-popover__metric-main">{centerValue}</span>
+          {centerLabel && <span className="sr-donut-popover__metric-sub">{centerLabel}</span>}
+        </div>
+      )}
+      <ul className="sr-donut-popover__list">
+        {visible.map((s) => {
+          const pct = sum > 0 ? ((Math.max(0, s.value) / sum) * 100).toFixed(1) : '0.0'
+          const isActive = highlightId === s.id
+          return (
+            <li key={s.id} className={isActive ? 'is-active' : ''}>
+              <span className="sr-donut-popover__dot" style={{ background: s.color }} />
+              <span className="sr-donut-popover__row-label">{s.label}</span>
+              <span className="sr-donut-popover__row-val">{fmt(s.value)}</span>
+              <span className="sr-donut-popover__row-pct">{pct}%</span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+export function DonutKpiChart({
+  slices, selectedSliceIds = [], onSelectSlice, size = 120,
+  centerValue, centerLabel, valueFmt,
+  highlightSliceId = null, onSliceHover,
+  onCenterHover,
+}) {
   const total = slices.reduce((s, x) => s + Math.max(0, x.value), 0) || 1
   const option = useMemo(() => ({
     series: [{
@@ -158,40 +237,43 @@ export function DonutKpiChart({ slices, selectedSliceIds = [], onSelectSlice, si
       startAngle: 90,
       padAngle: 2,
       label: { show: false },
-      emphasis: { scale: true, scaleSize: 5 },
-      data: slices.filter((s) => s.value > 0).map((s) => ({
-        name: s.id,
-        value: s.value,
-        itemStyle: {
-          color: s.color?.startsWith('var(') ? cssVar(s.color.slice(4, -1)) : s.color,
-          borderRadius: 6,
-          borderWidth: selectedSliceIds.includes(s.id) ? 3 : 0,
-          borderColor: cssVar('--action'),
-        },
-      })),
+      emphasis: { scale: true, scaleSize: 6, focus: 'self' },
+      blur: { itemStyle: { opacity: 0.25 } },
+      data: slices.filter((s) => s.value > 0).map((s) => {
+        const dimmed = highlightSliceId && highlightSliceId !== s.id
+        return {
+          name: s.id,
+          value: s.value,
+          itemStyle: {
+            color: s.color?.startsWith('var(') ? cssVar(s.color.slice(4, -1)) : s.color,
+            borderRadius: 6,
+            borderWidth: selectedSliceIds.includes(s.id) ? 3 : 0,
+            borderColor: cssVar('--action'),
+            opacity: dimmed ? 0.35 : 1,
+          },
+        }
+      }),
     }],
-    tooltip: {
-      ...baseTooltip(),
-      trigger: 'item',
-      textStyle: { fontSize: 13 },
-      formatter: (p) => {
-        const sl = slices.find((x) => x.id === p.name)
-        const pct = ((p.value / total) * 100).toFixed(1)
-        const val = valueFmt ? valueFmt(p.value) : p.value.toLocaleString()
-        return `<div style="font-weight:600;margin-bottom:4px">${sl?.label || p.name}</div><div style="font-family:JetBrains Mono,monospace;font-size:13px">${val} · ${pct}%</div>`
-      },
-    },
-    animationDuration: 450,
-  }), [slices, selectedSliceIds, total, valueFmt])
+    tooltip: { show: false },
+    animationDuration: 300,
+  }), [slices, selectedSliceIds, highlightSliceId])
 
   const onEvents = useMemo(() => ({
     click: (p) => { if (onSelectSlice && p.name) onSelectSlice(p.name) },
-  }), [onSelectSlice])
+    mouseover: (p) => { if (onSliceHover && p.name) onSliceHover(p.name) },
+  }), [onSelectSlice, onSliceHover])
 
   return (
     <div className="sr-donut-chart" style={{ width: size, height: size }}>
       <ReactECharts option={option} style={{ width: size, height: size }} opts={{ renderer: 'svg' }} onEvents={onEvents} notMerge lazyUpdate />
-      <div className="sr-donut-chart__center">
+      <button
+        type="button"
+        className="sr-donut-chart__center-hit"
+        aria-label={`${centerLabel || 'Total'}: ${centerValue}`}
+        onMouseEnter={() => onCenterHover?.(true)}
+        onFocus={() => onCenterHover?.(true)}
+      />
+      <div className="sr-donut-chart__center" aria-hidden="true">
         <div className="sr-donut-chart__value">{centerValue}</div>
         {centerLabel && <div className="sr-donut-chart__label">{centerLabel}</div>}
       </div>
@@ -199,27 +281,30 @@ export function DonutKpiChart({ slices, selectedSliceIds = [], onSelectSlice, si
   )
 }
 
-export function ModulePie({ slices, selectedSliceIds = [], onSelectSlice, size = 72 }) {
+export function ModulePie({ slices, selectedSliceIds = [], onSelectSlice, size = 72, valueFmt, highlightSliceId, onSliceHover }) {
+  const total = slices.reduce((s, x) => s + Math.max(0, x.value), 0) || 1
   const option = useMemo(() => ({
     series: [{
       type: 'pie', radius: ['48%', '82%'], center: ['50%', '50%'], startAngle: 90, padAngle: 2,
-      label: { show: false }, emphasis: { scale: true, scaleSize: 4 },
-      data: slices.map((s) => ({
+      label: { show: false }, emphasis: { scale: true, scaleSize: 4, focus: 'self' },
+      data: slices.filter((s) => s.value > 0).map((s) => ({
         name: s.id, value: s.value,
         itemStyle: {
           color: s.color?.startsWith('var(') ? cssVar(s.color.slice(4, -1)) : s.color,
           borderRadius: 5,
           borderWidth: selectedSliceIds.includes(s.id) ? 3 : 0,
           borderColor: cssVar('--action'),
+          opacity: highlightSliceId && highlightSliceId !== s.id ? 0.35 : 1,
         },
       })),
     }],
-    tooltip: { ...baseTooltip(), trigger: 'item', formatter: (p) => `<b>${slices.find((x) => x.id === p.name)?.label || p.name}</b><br/>${p.value.toLocaleString()}` },
-    animationDuration: 400,
-  }), [slices, selectedSliceIds])
+    tooltip: { show: false },
+    animationDuration: 300,
+  }), [slices, selectedSliceIds, highlightSliceId])
   const onEvents = useMemo(() => ({
     click: (p) => { if (onSelectSlice && p.name) onSelectSlice(p.name) },
-  }), [onSelectSlice])
+    mouseover: (p) => { if (onSliceHover && p.name) onSliceHover(p.name) },
+  }), [onSelectSlice, onSliceHover])
   return <ReactECharts option={option} style={{ width: size, height: size }} opts={{ renderer: 'svg' }} onEvents={onEvents} notMerge lazyUpdate />
 }
 
@@ -240,18 +325,6 @@ export function MultiLineChart({ labels, series, height = 220, yFmt }) {
     animationDuration: 500,
   }), [labels, series, fmt])
   return <ReactECharts option={option} style={{ width: '100%', height }} opts={{ renderer: 'svg' }} notMerge lazyUpdate />
-}
-
-export function formatCurrency(v, compact = true) {
-  if (v == null || Number.isNaN(v)) return '—'
-  const abs = Math.abs(v)
-  const sign = v < 0 ? '(' : ''
-  const end = v < 0 ? ')' : ''
-  if (compact) {
-    if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(2)}M${end}`
-    if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(2)}K${end}`
-  }
-  return `${sign}$${abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${end}`
 }
 
 export function formatPct(v, signed = false) {

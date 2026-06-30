@@ -16,6 +16,7 @@ export function ReportingScopeProvider({ children }) {
   const [filters, setFiltersState] = useState(() => ({
     country: 'ALL',
     salesRepId: 'ALL',
+    viewAsId: 'ALL',
     deliveryMonth: 'LAST_3',
     performanceFilter: null,
     status: 'ALL',
