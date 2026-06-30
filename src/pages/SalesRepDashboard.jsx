@@ -86,6 +86,10 @@ export default function SalesRepDashboard() {
 
   const totals = useMemo(() => withGpPct(sumMetrics(tableRows.filter((r) => !r.isSubRow).map((r) => r.recent))), [tableRows])
   const channelTotals = useMemo(() => channelSplit(scopeRepIds, periodMonths(periodKey)), [scopeRepIds, periodKey])
+  const repCount = useMemo(() => tableRows.filter((r) => !r.isSubRow).length, [tableRows])
+  const avgGpPerRep = repCount ? totals.gp / repCount : 0
+  const avgOrdersPerRep = repCount ? Math.round(totals.orders / repCount) : 0
+  const customersInScope = useMemo(() => tableRows.reduce((s, r) => s + r.customerCount, 0), [tableRows])
 
   const { top, bottom } = useMemo(() => topBottomReps(baseFilters, 5), [baseFilters])
   const { top: topCust, bottom: bottomCust } = useMemo(() => topBottomCustomers(baseFilters, 5), [baseFilters])
@@ -417,44 +421,60 @@ export default function SalesRepDashboard() {
           </Panel>
         </section>
 
-        <section className="sr-charts-row sr-charts-row--bar">
-          <Panel title="Rep GP Distribution" sub="Top 10 reps · last 12 months gross profit" pad>
-            <BarList
-              rows={barRows.map((r, i) => ({
-                key: r.id,
-                label: `${i + 1}. ${r.name}`,
-                value: Math.abs(r.gp12),
-                color: r.gp12 < 0 ? '#E8564A' : '#5795E3',
-              }))}
-              onRow={onOpenRep}
-              valueFmt={formatCurrency}
-              height={32}
-            />
-          </Panel>
-
-          <div className="sr-scope-summary">
-            <div className="sr-scope-summary__badge">{tableRows.filter((r) => !r.isSubRow).length} reps in scope</div>
-            <div className="sr-summary-cards">
-              <div className="sr-summary-card">
-                <div className="sr-summary-card__label">Avg GP / rep</div>
-                <div className="sr-summary-card__value">{formatCurrency(tableRows.filter((r) => !r.isSubRow).length ? totals.gp / tableRows.filter((r) => !r.isSubRow).length : 0)}</div>
-                <div className="sr-summary-card__sub">Asset {formatCurrency(channelTotals.asset.gp)} · Broker {formatCurrency(channelTotals.brokerage.gp)}</div>
-              </div>
-              <div className="sr-summary-card">
-                <div className="sr-summary-card__label">Avg orders / rep</div>
-                <div className="sr-summary-card__value">{tableRows.filter((r) => !r.isSubRow).length ? Math.round(totals.orders / tableRows.filter((r) => !r.isSubRow).length) : 0}</div>
-              </div>
-              <div className="sr-summary-card">
-                <div className="sr-summary-card__label">Customers in scope</div>
-                <div className="sr-summary-card__value">{tableRows.reduce((s, r) => s + r.customerCount, 0)}</div>
-              </div>
-              <div className="sr-summary-card">
-                <div className="sr-summary-card__label">At loss</div>
-                <div className="sr-summary-card__value sr-gp-negative">{counts.loss}</div>
-              </div>
+        <Panel
+          title="Rep GP Distribution"
+          sub="Top 10 reps · last 12 months gross profit"
+          aside={(
+            <span className="sr-gp-distro__scope">{repCount} reps in scope</span>
+          )}
+          bodyStyle={{ padding: 0 }}
+        >
+          <div className="sr-gp-distro">
+            <div className="sr-gp-distro__chart">
+              <BarList
+                rows={barRows.map((r, i) => ({
+                  key: r.id,
+                  label: `${i + 1}. ${r.name}`,
+                  value: Math.abs(r.gp12),
+                  color: r.gp12 < 0 ? '#E8564A' : '#5795E3',
+                }))}
+                onRow={onOpenRep}
+                valueFmt={formatCurrency}
+                height={32}
+              />
             </div>
+            <aside className="sr-gp-distro__aside">
+              <div className="sr-gp-distro__metrics">
+                <div className="sr-gp-distro__metric">
+                  <span className="sr-gp-distro__metric-label">Avg GP / rep</span>
+                  <strong className="sr-gp-distro__metric-value">{formatCurrency(avgGpPerRep)}</strong>
+                </div>
+                <div className="sr-gp-distro__metric">
+                  <span className="sr-gp-distro__metric-label">Avg orders</span>
+                  <strong className="sr-gp-distro__metric-value">{avgOrdersPerRep}</strong>
+                </div>
+                <div className="sr-gp-distro__metric">
+                  <span className="sr-gp-distro__metric-label">Customers</span>
+                  <strong className="sr-gp-distro__metric-value">{customersInScope}</strong>
+                </div>
+                <div className="sr-gp-distro__metric">
+                  <span className="sr-gp-distro__metric-label">At loss</span>
+                  <strong className={`sr-gp-distro__metric-value${counts.loss > 0 ? ' sr-gp-negative' : ''}`}>{counts.loss}</strong>
+                </div>
+              </div>
+              <div className="sr-gp-distro__channel">
+                <div className="sr-gp-distro__channel-cell">
+                  <span className="sr-gp-distro__channel-label">Asset</span>
+                  <strong>{formatCurrency(channelTotals.asset.gp)}</strong>
+                </div>
+                <div className="sr-gp-distro__channel-cell">
+                  <span className="sr-gp-distro__channel-label">Brokerage</span>
+                  <strong>{formatCurrency(channelTotals.brokerage.gp)}</strong>
+                </div>
+              </div>
+            </aside>
           </div>
-        </section>
+        </Panel>
 
         <Panel title="Sales Rep Performance" sub={`${tableRows.length} reps · click row for detail`} bodyStyle={{ padding: 0 }}>
           <div className="sr-table-wrap sr-table-wrap--full">

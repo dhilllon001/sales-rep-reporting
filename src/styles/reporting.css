@@ -832,8 +832,118 @@
 }
 
 .sr-charts-row--bar {
-  grid-template-columns: 1.4fr 0.6fr;
+  grid-template-columns: 1fr;
   align-items: stretch;
+}
+
+/* Unified GP distribution + scope metrics */
+.sr-gp-distro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 220px;
+}
+
+.sr-gp-distro__chart {
+  padding: 16px 18px 18px;
+  min-width: 0;
+}
+
+.sr-gp-distro__scope {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.sr-gp-distro__aside {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-1);
+  background: linear-gradient(180deg, #F8FAFC 0%, var(--bg-surface-2) 100%);
+}
+
+.sr-gp-distro__metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+}
+
+.sr-gp-distro__metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-1);
+}
+
+.sr-gp-distro__metric:nth-child(odd) {
+  border-right: 1px solid var(--border-1);
+}
+
+.sr-gp-distro__metric-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.sr-gp-distro__metric-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--fg-1);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-gp-distro__channel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--border-1);
+}
+
+.sr-gp-distro__channel-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 16px;
+}
+
+.sr-gp-distro__channel-cell:first-child {
+  border-right: 1px solid var(--border-1);
+}
+
+.sr-gp-distro__channel-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.sr-gp-distro__channel-cell strong {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg-1);
+}
+
+@media (max-width: 1200px) {
+  .sr-gp-distro {
+    grid-template-columns: 1fr;
+  }
+  .sr-gp-distro__aside {
+    border-left: none;
+    border-top: 1px solid var(--border-1);
+  }
 }
 
 @media (max-width: 1200px) {
